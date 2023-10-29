@@ -1,0 +1,7 @@
+#delete-todo, .p-container{
+    display: inline;
+}
+
+li{
+    margin-top: 10px;
+}
