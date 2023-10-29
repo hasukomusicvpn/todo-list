@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, getDoc} from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBWPCV6rYquQmpWa_TaLXr-YRKYjsXyXqM",
@@ -10,16 +10,13 @@ const firebaseConfig = {
   appId: "1:316672678531:web:4c8421026df75336e619b6"
 };
 
-
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function updateTodo(id) {
-  todoList.innerHTML = ''
-  const docRef = doc(db, "todo", id)
+  const docRef = doc(db, "todo", id);
   const docSnap = await getDoc(docRef);
-  if (docSnap.data().check == "False"){
+  if (docSnap.data().check == "False") {
     await updateDoc(docRef, {
       check: "True"
     });
@@ -28,76 +25,44 @@ async function updateTodo(id) {
       check: "False"
     });
   }
+}
 
-async function deleteTodo(id){
-  localStorage.setItem("id delete", id)
-  todoList.innerHTML = '';
-  await deleteDoc(doc(db, "todo", localStorage.getItem("id delete")));
+async function deleteTodo(id) {
+  await deleteDoc(doc(db, "todo", id));
+  // xoa item
+  const deletedItem = document.getElementById(`delete-${id}`);
+  deletedItem.parentNode.remove();
+}
 
-};
+const todoList = document.getElementById("todo-list");
 
+async function loadTodos() {
   const querySnapshot = await getDocs(collection(db, "todo"));
   querySnapshot.forEach((doc) => {
-  let todoOutput = document.createElement('li');
-  todoOutput.innerHTML = `
-    <p class="p-container"><input type="checkbox" id="checkbox-${doc.id}"> ${doc.data().id}</p> <button id="delete-${doc.id}">Delete</button>
-    `
-  todoList.appendChild(todoOutput);
-  if (doc.data().check == "False") {
-    document.getElementById(`checkbox-${doc.id}`).checked = false;
-  } else {
-    document.getElementById(`checkbox-${doc.id}`).checked = true;
-  }
-  document.getElementById(`checkbox-${doc.id}`).addEventListener("change", () => updateTodo(doc.id))
-  document.getElementById(`delete-${doc.id}`).addEventListener("click", () => deleteTodo(doc.id))
-}); 
+    const todoOutput = document.createElement('li');
+    todoOutput.innerHTML = `
+      <p class="p-container"><input type="checkbox" id="checkbox-${doc.id}"> ${doc.data().id}</p> <button id="delete-${doc.id}">Delete</button>
+    `;
+    todoList.appendChild(todoOutput);
+    if (doc.data().check == "False") {
+      document.getElementById(`checkbox-${doc.id}`).checked = false;
+    } else {
+      document.getElementById(`checkbox-${doc.id}`).checked = true;
+    }
+    document.getElementById(`checkbox-${doc.id}`).addEventListener("change", () => updateTodo(doc.id));
+    document.getElementById(`delete-${doc.id}`).addEventListener("click", () => deleteTodo(doc.id));
+  });
 }
 
-let todoList = document.getElementById("todo-list");
+loadTodos(); // load
 
-const querySnapshot = await getDocs(collection(db, "todo"));
-querySnapshot.forEach((doc) => {
-let todoOutput = document.createElement('li');
-todoOutput.innerHTML = `
-  <p class="p-container"><input type="checkbox" id="checkbox-${doc.id}"> ${doc.data().id}</p> <button id="delete-${doc.id}">Delete</button>
-  `
-todoList.appendChild(todoOutput);
-if (doc.data().check == "False") {
-  document.getElementById(`checkbox-${doc.id}`).checked = false;
-} else {
-  document.getElementById(`checkbox-${doc.id}`).checked = true;
-}
-document.getElementById(`checkbox-${doc.id}`).addEventListener("change", () => updateTodo(doc.id))
-document.getElementById(`delete-${doc.id}`).addEventListener("click", () => deleteTodo(doc.id))
-}); 
-
-
-
-let todoInput = document.getElementById("todo-input")
-document.getElementById("todo-submit").onclick = async() => {
+const todoInput = document.getElementById("todo-input");
+document.getElementById("todo-submit").onclick = async () => {
   const docRef = await addDoc(collection(db, "todo"), {
     id: todoInput.value,
     check: "False"
   });
   console.log("Document written with ID: ", docRef.id);
-  todoList.innerHTML = '';
   todoInput.value = '';
-  const querySnapshot = await getDocs(collection(db, "todo"));
-querySnapshot.forEach((doc) => {
-  let todoOutput = document.createElement('li');
-  todoOutput.innerHTML = `
-    <p class="p-container"><input type="checkbox" id="${doc.data().value}"> ${doc.data().id}</p>  <button id="delete-${doc.id}">Delete</button>
-    `
-  todoList.appendChild(todoOutput);
-  if (doc.data().check == "False") {
-    document.getElementById(doc.value).checked = false;
-  } else {
-    document.getElementById(doc.value).checked = true;
-  }
-  document.getElementById(`checkbox-${doc.id}`).addEventListener("change", () => updateTodo(doc.id))
-  document.getElementById(`delete-${doc.id}`).addEventListener("click", () => deleteTodo(doc.id))
-
-}); 
-
-}
-
+  loadTodos(); // reload
+};
