@@ -14,7 +14,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function updateTodo(id) {
-  todoList.innerHTML = '';
   const docRef = doc(db, "todo", id);
   const docSnap = await getDoc(docRef);
   if (docSnap.data().check == "False") {
@@ -29,42 +28,20 @@ async function updateTodo(id) {
 }
 
 async function deleteTodo(id) {
-  todoList.innerHTML = '';
   await deleteDoc(doc(db, "todo", id));
+  // xoa item
+  const deletedItem = document.getElementById(`delete-${id}`);
+  deletedItem.parentNode.remove();
 }
 
 const todoList = document.getElementById("todo-list");
 
-const querySnapshot = await getDocs(collection(db, "todo"));
-querySnapshot.forEach((doc) => {
-  const todoOutput = document.createElement('li');
-  todoOutput.innerHTML = `
-    <p class="p-container"><input type="checkbox" id="checkbox-${doc.id}"> ${doc.data().id}</p> <button id="delete-${doc.id}">Delete</button>
-  `;
-  todoList.appendChild(todoOutput);
-  if (doc.data().check == "False") {
-    document.getElementById(`checkbox-${doc.id}`).checked = false;
-  } else {
-    document.getElementById(`checkbox-${doc.id}`).checked = true;
-  }
-  document.getElementById(`checkbox-${doc.id}`).addEventListener("change", () => updateTodo(doc.id));
-  document.getElementById(`delete-${doc.id}`).addEventListener("click", () => deleteTodo(doc.id));
-});
-
-const todoInput = document.getElementById("todo-input");
-document.getElementById("todo-submit").onclick = async () => {
-  const docRef = await addDoc(collection(db, "todo"), {
-    id: todoInput.value,
-    check: "False"
-  });
-  console.log("Document written with ID: ", docRef.id);
-  todoList.innerHTML = '';
-  todoInput.value = '';
+async function loadTodos() {
   const querySnapshot = await getDocs(collection(db, "todo"));
   querySnapshot.forEach((doc) => {
     const todoOutput = document.createElement('li');
     todoOutput.innerHTML = `
-      <p class="p-container"><input type="checkbox" id="checkbox-${doc.id}"> ${doc.data().id}</p>  <button id="delete-${doc.id}">Delete</button>
+      <p class="p-container"><input type="checkbox" id="checkbox-${doc.id}"> ${doc.data().id}</p> <button id="delete-${doc.id}">Delete</button>
     `;
     todoList.appendChild(todoOutput);
     if (doc.data().check == "False") {
@@ -75,4 +52,17 @@ document.getElementById("todo-submit").onclick = async () => {
     document.getElementById(`checkbox-${doc.id}`).addEventListener("change", () => updateTodo(doc.id));
     document.getElementById(`delete-${doc.id}`).addEventListener("click", () => deleteTodo(doc.id));
   });
+}
+
+loadTodos(); // load
+
+const todoInput = document.getElementById("todo-input");
+document.getElementById("todo-submit").onclick = async () => {
+  const docRef = await addDoc(collection(db, "todo"), {
+    id: todoInput.value,
+    check: "False"
+  });
+  console.log("Document written with ID: ", docRef.id);
+  todoInput.value = '';
+  loadTodos(); // reload
 };
