@@ -30,9 +30,8 @@ async function updateTodo(id) {
   }
 
 async function deleteTodo(id){
-  localStorage.setItem("id delete", id)
   todoList.innerHTML = '';
-  await deleteDoc(doc(db, "todo", localStorage.getItem("id delete")));
+  await deleteDoc(doc(db, "todo", id));
 
 };
 
@@ -83,21 +82,20 @@ document.getElementById("todo-submit").onclick = async() => {
   todoList.innerHTML = '';
   todoInput.value = '';
   const querySnapshot = await getDocs(collection(db, "todo"));
-querySnapshot.forEach((doc) => {
-  let todoOutput = document.createElement('li');
-  todoOutput.innerHTML = `
-    <p class="p-container"><input type="checkbox" id="${doc.data().value}"> ${doc.data().id}</p>  <button id="delete-${doc.id}">Delete</button>
-    `
-  todoList.appendChild(todoOutput);
-  if (doc.data().check == "False") {
-    document.getElementById(doc.value).checked = false;
-  } else {
-    document.getElementById(doc.value).checked = true;
-  }
-  document.getElementById(`checkbox-${doc.id}`).addEventListener("change", () => updateTodo(doc.id))
-  document.getElementById(`delete-${doc.id}`).addEventListener("click", () => deleteTodo(doc.id))
+  querySnapshot.forEach((doc) => {
+    const todoOutput = document.createElement('li');
+    todoOutput.innerHTML = `
+      <p class="p-container"><input type="checkbox" id="checkbox-${doc.id}"> ${doc.data().id}</p>  <button id="delete-${doc.id}">Delete</button>
+    `;
+    todoList.appendChild(todoOutput);
+    if (doc.data().check == "False") {
+      document.getElementById(`checkbox-${doc.id}`).checked = false;
+    } else {
+      document.getElementById(`checkbox-${doc.id}`).checked = true;
+    }
+    document.getElementById(`checkbox-${doc.id}`).addEventListener("change", () => updateTodo(doc.id));
+    document.getElementById(`delete-${doc.id}`).addEventListener("click", () => deleteTodo(doc.id))
+  });
+};
 
-}); 
-
-}
 
