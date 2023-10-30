@@ -15,8 +15,30 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+async function deleteTodo(id){
+  todoList.innerHTML = '';
+  await deleteDoc(doc(db, "todo", id));
+
+  const querySnapshot = await getDocs(collection(db, "todo"));
+querySnapshot.forEach((doc) => {
+let todoOutput = document.createElement('li');
+todoOutput.innerHTML = `
+  <p class="p-container"><input type="checkbox" id="checkbox-${doc.id}"> ${doc.data().id}</p> <button id="delete-${doc.id}">Delete</button>
+  `
+todoList.appendChild(todoOutput);
+if (doc.data().check == "False") {
+  document.getElementById(`checkbox-${doc.id}`).checked = false;
+} else {
+  document.getElementById(`checkbox-${doc.id}`).checked = true;
+}
+document.getElementById(`checkbox-${doc.id}`).addEventListener("change", () => updateTodo(doc.id))
+document.getElementById(`delete-${doc.id}`).addEventListener("click", () => deleteTodo(doc.id))
+})
+
+
+}
 async function updateTodo(id) {
-  todoList.innerHTML = ''
+todoList.innerHTML = ''
   const docRef = doc(db, "todo", id)
   const docSnap = await getDoc(docRef);
   if (docSnap.data().check == "False"){
@@ -28,12 +50,6 @@ async function updateTodo(id) {
       check: "False"
     });
   }
-
-async function deleteTodo(id){
-  todoList.innerHTML = '';
-  await deleteDoc(doc(db, "todo", id));
-
-};
 
   const querySnapshot = await getDocs(collection(db, "todo"));
   querySnapshot.forEach((doc) => {
